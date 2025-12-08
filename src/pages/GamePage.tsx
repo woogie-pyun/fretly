@@ -78,7 +78,7 @@ export function GamePage() {
           <>
             {/* String indicator */}
             <p className="text-slate-400 text-lg mb-2">
-              String {game.currentQuestion.string}
+              {game.currentQuestion.string}번 줄
             </p>
 
             {/* Target Note */}
@@ -90,7 +90,7 @@ export function GamePage() {
             <div className="mt-8 h-20 flex items-center justify-center">
               {game.status === 'playing' && (
                 <p className="text-slate-400 text-lg animate-pulse">
-                  {game.mode === 'listening' ? 'Listening...' : 'Think...'}
+                  {game.mode === 'listening' ? '듣는 중...' : '생각 중...'}
                 </p>
               )}
 
@@ -101,14 +101,14 @@ export function GamePage() {
                       game.isCorrect ? 'text-emerald-400' : 'text-rose-500'
                     }`}
                   >
-                    {game.isCorrect ? 'Correct!' : `Fret ${game.currentQuestion.fret}`}
+                    {game.isCorrect ? '정답!' : `${game.currentQuestion.fret}프렛`}
                   </p>
                   {!game.isCorrect && game.mode === 'listening' && (
                     <button
                       onClick={handleNext}
                       className="mt-4 px-6 py-2 bg-slate-700 rounded-lg text-slate-100"
                     >
-                      Next
+                      다음
                     </button>
                   )}
                 </div>

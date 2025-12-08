@@ -16,7 +16,7 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
       <input
         type="range"
         className={cn(
-          'w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer',
+          'w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer touch-none',
           '[&::-webkit-slider-thumb]:appearance-none',
           '[&::-webkit-slider-thumb]:w-5',
           '[&::-webkit-slider-thumb]:h-5',

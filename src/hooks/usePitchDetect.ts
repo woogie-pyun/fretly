@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { YIN } from 'pitchfinder'
 import type { Note } from '@/types'
 import { frequencyToNote } from '@/lib/music-theory'
+import { MIN_VOLUME_THRESHOLD, MIN_FREQUENCY, MAX_FREQUENCY } from '@/lib/constants'
 
 interface UsePitchDetectOptions {
   analyser: AnalyserNode | null
@@ -15,7 +17,18 @@ interface UsePitchDetectReturn {
 }
 
 /**
- * Hook for pitch detection using Pitchfinder library
+ * Calculate RMS (Root Mean Square) volume from audio buffer
+ */
+function calculateRMS(buffer: Float32Array): number {
+  let sum = 0
+  for (let i = 0; i < buffer.length; i++) {
+    sum += buffer[i] * buffer[i]
+  }
+  return Math.sqrt(sum / buffer.length)
+}
+
+/**
+ * Hook for pitch detection using Pitchfinder YIN algorithm
  * Integrates with Web Audio API analyser node
  */
 export function usePitchDetect({
@@ -29,9 +42,29 @@ export function usePitchDetect({
 
   const rafRef = useRef<number | null>(null)
   const bufferRef = useRef<Float32Array | null>(null)
+  const detectPitchRef = useRef<ReturnType<typeof YIN> | null>(null)
+  const onNoteDetectedRef = useRef(onNoteDetected)
+
+  // Update callback ref
+  useEffect(() => {
+    onNoteDetectedRef.current = onNoteDetected
+  }, [onNoteDetected])
+
+  // Initialize YIN detector when analyser changes
+  useEffect(() => {
+    if (analyser) {
+      detectPitchRef.current = YIN({
+        sampleRate: analyser.context.sampleRate,
+        threshold: 0.1, // Lower = more sensitive, higher = more accurate
+      })
+    }
+  }, [analyser])
 
   const detectPitch = useCallback(() => {
-    if (!analyser || !isEnabled) return
+    if (!analyser || !isEnabled || !detectPitchRef.current) {
+      rafRef.current = requestAnimationFrame(detectPitch)
+      return
+    }
 
     // Initialize buffer if needed
     if (!bufferRef.current || bufferRef.current.length !== analyser.fftSize) {
@@ -39,27 +72,32 @@ export function usePitchDetect({
     }
 
     // Get time domain data
-    analyser.getFloatTimeDomainData(bufferRef.current)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    analyser.getFloatTimeDomainData(bufferRef.current as any)
 
-    // TODO: Integrate Pitchfinder YIN algorithm here
-    // For now, this is a skeleton that will be implemented later
-    // const detectPitchYIN = Pitchfinder.YIN({ sampleRate: analyser.context.sampleRate })
-    // const pitch = detectPitchYIN(bufferRef.current)
+    // Check volume threshold (noise filtering)
+    const rms = calculateRMS(bufferRef.current)
 
-    // Placeholder: will be replaced with actual pitch detection
-    const pitch = null as number | null
+    if (rms < MIN_VOLUME_THRESHOLD) {
+      // Too quiet, skip detection
+      rafRef.current = requestAnimationFrame(detectPitch)
+      return
+    }
 
-    if (pitch && pitch > 0) {
+    // Detect pitch using YIN algorithm
+    const pitch = detectPitchRef.current(bufferRef.current)
+
+    if (pitch && pitch >= MIN_FREQUENCY && pitch <= MAX_FREQUENCY) {
       const note = frequencyToNote(pitch)
       setDetectedFrequency(pitch)
       setDetectedNote(note)
-      setConfidence(0.9) // Placeholder confidence
-      onNoteDetected?.(note, pitch)
+      setConfidence(rms) // Use volume as confidence indicator
+      onNoteDetectedRef.current?.(note, pitch)
     }
 
     // Continue detection loop
     rafRef.current = requestAnimationFrame(detectPitch)
-  }, [analyser, isEnabled, onNoteDetected])
+  }, [analyser, isEnabled])
 
   useEffect(() => {
     if (isEnabled && analyser) {

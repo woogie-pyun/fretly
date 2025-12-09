@@ -60,3 +60,12 @@ export const STORAGE_KEYS = {
 
 // Pitch detection tolerance (in cents)
 export const PITCH_TOLERANCE_CENTS = 50
+
+// Minimum RMS volume threshold for pitch detection (0-1)
+export const MIN_VOLUME_THRESHOLD = 0.01
+
+// Minimum frequency for guitar (low E ~82Hz, with some margin)
+export const MIN_FREQUENCY = 70
+
+// Maximum frequency for guitar (high E 12th fret ~660Hz, with margin)
+export const MAX_FREQUENCY = 1200

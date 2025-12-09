@@ -18,9 +18,9 @@ export function useAudio(): UseAudioReturn {
   const [isListening, setIsListening] = useState(false)
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null)
+  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null)
 
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const analyserRef = useRef<AnalyserNode | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
 
@@ -41,25 +41,24 @@ export function useAudio(): UseAudioReturn {
       streamRef.current = stream
 
       // Create AudioContext
-      const audioContext = new AudioContext()
-      audioContextRef.current = audioContext
+      const ctx = new AudioContext()
+      setAudioContext(ctx)
 
       // Create analyser node
-      const analyser = audioContext.createAnalyser()
-      analyser.fftSize = 2048
-      analyser.smoothingTimeConstant = 0.8
-      analyserRef.current = analyser
+      const analyserNode = ctx.createAnalyser()
+      analyserNode.fftSize = 2048
+      analyserNode.smoothingTimeConstant = 0.8
+      setAnalyser(analyserNode)
 
       // Connect microphone to analyser
-      const source = audioContext.createMediaStreamSource(stream)
-      source.connect(analyser)
+      const source = ctx.createMediaStreamSource(stream)
+      source.connect(analyserNode)
       sourceRef.current = source
 
       setIsListening(true)
     } catch (err) {
       setHasPermission(false)
       setError(err instanceof Error ? err.message : 'Failed to access microphone')
-      console.error('Audio error:', err)
     }
   }, [])
 
@@ -77,12 +76,12 @@ export function useAudio(): UseAudioReturn {
     }
 
     // Close audio context
-    if (audioContextRef.current) {
-      audioContextRef.current.close()
-      audioContextRef.current = null
-    }
+    setAudioContext((ctx) => {
+      ctx?.close()
+      return null
+    })
 
-    analyserRef.current = null
+    setAnalyser(null)
     setIsListening(false)
   }, [])
 
@@ -92,7 +91,7 @@ export function useAudio(): UseAudioReturn {
     error,
     startListening,
     stopListening,
-    audioContext: audioContextRef.current,
-    analyser: analyserRef.current,
+    audioContext,
+    analyser,
   }
 }

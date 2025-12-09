@@ -62,14 +62,14 @@ LLM Agent가 효율적으로 처리할 수 있도록 기능 단위로 분리한 
 **목표:** 실제 피치 감지 로직 구현
 
 **작업 내용:**
-- [ ] `usePitchDetect` 훅에 Pitchfinder YIN 알고리즘 통합
-- [ ] 감지된 주파수 → Note 변환 로직 검증
-- [ ] 옥타브 무관 비교 로직 (Pitch Class 비교)
-- [ ] 노이즈 필터링 (일정 볼륨 이상만 감지)
+- [x] `usePitchDetect` 훅에 Pitchfinder YIN 알고리즘 통합
+- [x] 감지된 주파수 → Note 변환 로직 검증
+- [x] 옥타브 무관 비교 로직 (Pitch Class 비교)
+- [x] 노이즈 필터링 (일정 볼륨 이상만 감지)
 
 **수정 파일:**
 - `src/hooks/usePitchDetect.ts`
-- `src/lib/music-theory.ts` (필요시)
+- `src/lib/constants.ts` (MIN_VOLUME_THRESHOLD, MIN/MAX_FREQUENCY 추가)
 
 **완료 기준:** 마이크 입력 → 실시간 Note 감지 → 콘솔에 출력 확인
 
@@ -79,17 +79,16 @@ LLM Agent가 효율적으로 처리할 수 있도록 기능 단위로 분리한 
 **목표:** 마이크 입력으로 정답을 체크하는 모드 완성
 
 **작업 내용:**
-- [ ] GamePage에서 Mode A 플로우 구현
+- [x] GamePage에서 Mode A 플로우 구현
   - 문제 출제 → 마이크 리스닝 → 정답 감지 시 다음 문제
   - 타임아웃 시 실패 처리
-- [ ] 마이크 권한 요청 UI/UX
-- [ ] "Listening..." 상태 + 마이크 아이콘 애니메이션
-- [ ] Streak 카운트 로직 연동
-- [ ] 정답 시 즉시 다음 문제, 오답 시 Next 버튼 표시
+- [x] 마이크 권한 요청 UI/UX
+- [x] "Listening..." 상태 + 마이크 아이콘 애니메이션
+- [x] Streak 카운트 로직 연동
+- [x] 정답 시 즉시 다음 문제, 오답 시 Next 버튼 표시
 
 **수정 파일:**
 - `src/pages/GamePage.tsx`
-- `src/hooks/useAudio.ts` (필요시)
 
 **완료 기준:** 정확한 음 연주 시 정답 처리, 틀린 음/타임아웃 시 오답 처리
 
@@ -151,8 +150,8 @@ LLM Agent가 효율적으로 처리할 수 있도록 기능 단위로 분리한 
 | Step 1 | ✅ 완료 | HomePage UI + Store 연동 |
 | Step 2 | ✅ 완료 | useTimer 훅 구현 |
 | Step 3 | ✅ 완료 | Image Training 모드 구현 |
-| Step 4 | ⬜ 대기 | |
-| Step 5 | ⬜ 대기 | |
+| Step 4 | ✅ 완료 | Pitchfinder YIN 통합 |
+| Step 5 | ✅ 완료 | Listening Challenge 구현 |
 | Step 6 | ⬜ 대기 | |
 | Step 7 | ⬜ 대기 | 선택 사항 |
 | Step 8 | ⬜ 대기 | |

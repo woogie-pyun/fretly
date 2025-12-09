@@ -1,9 +1,11 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Square } from 'lucide-react'
+import { Square, Mic } from 'lucide-react'
 import { useGameStore } from '@/store/useGameStore'
-import { useGameLogic, useWakeLock, useTimer } from '@/hooks'
+import { useGameLogic, useWakeLock, useTimer, useAudio, usePitchDetect } from '@/hooks'
 import { FEEDBACK_DELAY_MS } from '@/lib/constants'
+import { isSameNote } from '@/lib/music-theory'
+import type { Note } from '@/types'
 
 /**
  * GamePage - Active Game Interface
@@ -15,10 +17,47 @@ export function GamePage() {
   const { startNewQuestion } = useGameLogic()
   const { request: requestWakeLock, release: releaseWakeLock } = useWakeLock()
   const feedbackTimeoutRef = useRef<number | null>(null)
+  const [micError, setMicError] = useState<string | null>(null)
 
-  // 타임아웃 핸들러 (Mode B: 정답 공개)
+  // Audio hooks for Mode A
+  const {
+    isListening,
+    error: audioError,
+    startListening,
+    stopListening,
+    analyser,
+  } = useAudio()
+
+  // 정답 체크 핸들러
+  const handleNoteDetected = useCallback(
+    (detectedNote: Note) => {
+      if (
+        game.mode === 'listening' &&
+        game.status === 'playing' &&
+        game.currentQuestion
+      ) {
+        if (isSameNote(detectedNote, game.currentQuestion.note)) {
+          // 정답!
+          submitAnswer(true)
+        }
+      }
+    },
+    [game.mode, game.status, game.currentQuestion, submitAnswer]
+  )
+
+  // Pitch detection
+  const { detectedNote } = usePitchDetect({
+    analyser,
+    isEnabled: isListening && game.mode === 'listening' && game.status === 'playing',
+    onNoteDetected: handleNoteDetected,
+  })
+
+  // 타임아웃 핸들러
   const handleTimeout = useCallback(() => {
     if (game.mode === 'image') {
+      submitAnswer(false)
+    } else if (game.mode === 'listening') {
+      // Mode A: 타임아웃 시 오답 처리
       submitAnswer(false)
     }
   }, [game.mode, submitAnswer])
@@ -29,7 +68,7 @@ export function GamePage() {
     { onTimeout: handleTimeout }
   )
 
-  // Progress 계산 (settings.timerDuration 직접 사용)
+  // Progress 계산
   const progress = settings.timerDuration > 0 ? timeLeft / settings.timerDuration : 0
 
   // 다음 문제로 이동
@@ -49,18 +88,40 @@ export function GamePage() {
     requestWakeLock()
     startNewQuestion()
 
-    // Mode B: 바로 타이머 시작
-    if (game.mode === 'image') {
-      startTimer(settings.timerDuration)
+    // Start timer for both modes
+    startTimer(settings.timerDuration)
+
+    // Mode A: 마이크 시작
+    if (game.mode === 'listening') {
+      startListening().catch((err) => {
+        setMicError(err.message || '마이크 접근 실패')
+      })
     }
 
     return () => {
       releaseWakeLock()
+      stopListening()
       if (feedbackTimeoutRef.current) {
         clearTimeout(feedbackTimeoutRef.current)
       }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Mode A: 정답 시 즉시 다음 문제
+  useEffect(() => {
+    if (game.mode === 'listening' && game.status === 'feedback' && game.isCorrect) {
+      // 정답 시 짧은 딜레이 후 다음 문제
+      feedbackTimeoutRef.current = window.setTimeout(() => {
+        goToNextQuestion()
+      }, 500)
+
+      return () => {
+        if (feedbackTimeoutRef.current) {
+          clearTimeout(feedbackTimeoutRef.current)
+        }
+      }
+    }
+  }, [game.mode, game.status, game.isCorrect, goToNextQuestion])
 
   // Mode B: 피드백 후 자동으로 다음 문제
   useEffect(() => {
@@ -79,6 +140,7 @@ export function GamePage() {
 
   const handleStop = () => {
     resetTimer()
+    stopListening()
     endGame()
     navigate('/')
   }
@@ -86,6 +148,9 @@ export function GamePage() {
   const handleNext = () => {
     goToNextQuestion()
   }
+
+  // 마이크 에러 표시
+  const showMicError = micError || audioError
 
   return (
     <div
@@ -97,7 +162,7 @@ export function GamePage() {
           : 'bg-slate-900'
       }`}
     >
-      {/* Progress Bar - 높이 고정으로 레이아웃 shift 방지 */}
+      {/* Progress Bar */}
       <div className="h-1.5 bg-slate-800 overflow-hidden">
         {/* Mode B: CSS animation */}
         {game.mode === 'image' && game.currentQuestion && (
@@ -131,18 +196,22 @@ export function GamePage() {
           70.1% { background-color: rgb(244, 63, 94); }
           to { width: 0%; background-color: rgb(244, 63, 94); }
         }
+        @keyframes pulse-mic {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.1); }
+        }
       `}</style>
 
       {/* Header - 고정 높이로 레이아웃 shift 방지 */}
       <div className="flex justify-between items-center p-4 h-14">
         {/* Streak (Mode A only) */}
         {game.mode === 'listening' && (
-          <div className="text-amber-400 font-bold">
+          <div className="text-amber-400 font-bold flex items-center gap-1">
             <span className="text-xl">🔥</span>
-            <span className="ml-1">{game.streak}</span>
+            <span>{game.streak}</span>
           </div>
         )}
-        {/* Timer display for Mode B - 항상 렌더링, 투명도로 숨김 */}
+        {/* Timer display for Mode B */}
         {game.mode === 'image' && (
           <div
             className={`text-slate-400 font-mono text-lg transition-opacity duration-200 ${
@@ -153,10 +222,27 @@ export function GamePage() {
           </div>
         )}
         <div className="flex-1" />
+        {/* Mic indicator for Mode A */}
+        {game.mode === 'listening' && game.status === 'playing' && (
+          <div
+            className="text-indigo-400"
+            style={{ animation: 'pulse-mic 1.5s ease-in-out infinite' }}
+          >
+            <Mic className="w-6 h-6" />
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-4">
+        {/* Mic Error */}
+        {showMicError && game.mode === 'listening' && (
+          <div className="mb-8 p-4 bg-rose-500/20 rounded-lg text-rose-400 text-center">
+            <p className="font-bold">마이크 오류</p>
+            <p className="text-sm mt-1">{showMicError}</p>
+          </div>
+        )}
+
         {game.currentQuestion && (
           <>
             {/* String indicator */}
@@ -168,6 +254,13 @@ export function GamePage() {
             <h1 className="text-7xl font-bold font-mono text-slate-100 tracking-tighter">
               {game.currentQuestion.note}
             </h1>
+
+            {/* Detected Note (Mode A, playing) */}
+            {game.mode === 'listening' && game.status === 'playing' && detectedNote && (
+              <p className="mt-4 text-2xl text-slate-500 font-mono">
+                {detectedNote}
+              </p>
+            )}
 
             {/* Status / Feedback */}
             <div className="mt-8 h-20 flex items-center justify-center">

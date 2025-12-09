@@ -27,9 +27,9 @@ LLM Agent가 효율적으로 처리할 수 있도록 기능 단위로 분리한 
 **목표:** 게임에서 사용할 타이머 훅 구현
 
 **작업 내용:**
-- [ ] `useTimer` 훅 생성 (countdown, pause, reset 기능)
-- [ ] Progress bar와 연동
-- [ ] 타임아웃 시 콜백 실행
+- [x] `useTimer` 훅 생성 (countdown, pause, reset 기능)
+- [x] Progress bar와 연동
+- [x] 타임아웃 시 콜백 실행
 
 **수정 파일:**
 - `src/hooks/useTimer.ts` (신규)
@@ -43,16 +43,16 @@ LLM Agent가 효율적으로 처리할 수 있도록 기능 단위로 분리한 
 **목표:** 마이크 없이 동작하는 Image Training 모드 완성
 
 **작업 내용:**
-- [ ] GamePage에서 Mode B 플로우 구현
+- [x] GamePage에서 Mode B 플로우 구현
   - 문제 출제 → Thinking Time → 정답 공개 → Auto Next
-- [ ] 타이머 연동 (설정된 시간만큼 대기)
-- [ ] 정답 공개 후 1.5초 대기 → 자동으로 다음 문제
-- [ ] "Think..." 상태 UI 표시
-- [ ] 정답 Fret 번호 표시
+- [x] 타이머 연동 (설정된 시간만큼 대기)
+- [x] 정답 공개 후 1.5초 대기 → 자동으로 다음 문제
+- [x] "Think..." 상태 UI 표시
+- [x] 정답 Fret 번호 표시
 
 **수정 파일:**
 - `src/pages/GamePage.tsx`
-- `src/store/useGameStore.ts` (필요시)
+- `src/lib/constants.ts` (FEEDBACK_DELAY_MS 추가)
 
 **완료 기준:** Mode B 버튼 클릭 → 문제 출제 → 타이머 종료 → 정답 표시 → 자동 다음 문제
 
@@ -149,8 +149,8 @@ LLM Agent가 효율적으로 처리할 수 있도록 기능 단위로 분리한 
 | Step | 상태 | 비고 |
 |------|------|------|
 | Step 1 | ✅ 완료 | HomePage UI + Store 연동 |
-| Step 2 | ⬜ 대기 | |
-| Step 3 | ⬜ 대기 | |
+| Step 2 | ✅ 완료 | useTimer 훅 구현 |
+| Step 3 | ✅ 완료 | Image Training 모드 구현 |
 | Step 4 | ⬜ 대기 | |
 | Step 5 | ⬜ 대기 | |
 | Step 6 | ⬜ 대기 | |

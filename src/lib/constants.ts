@@ -49,6 +49,9 @@ export const DEFAULT_SETTINGS = {
 export const TIMER_MIN = 2
 export const TIMER_MAX = 15
 
+// Feedback display duration (ms) before auto-next in Image mode
+export const FEEDBACK_DELAY_MS = 1500
+
 // localStorage keys
 export const STORAGE_KEYS = {
   SETTINGS: 'guitar_trainer_settings',

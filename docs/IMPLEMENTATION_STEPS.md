@@ -98,17 +98,17 @@ LLM Agent가 효율적으로 처리할 수 있도록 기능 단위로 분리한 
 **목표:** 정답/오답 피드백 효과 구현
 
 **작업 내용:**
-- [ ] 정답 시 화면 녹색 플래시 (300ms)
-- [ ] 오답 시 화면 빨간색 틴트 + 살짝 흔들림
-- [ ] 효과음 파일 추가 및 재생 로직
-  - 정답: "딩동댕" 효과음
-  - 오답: "땡" 효과음
-- [ ] `useSoundEffect` 훅 구현
+- [x] 정답 시 화면 녹색 플래시 (300ms)
+- [x] 오답 시 화면 빨간색 틴트 + 살짝 흔들림
+- [x] 효과음 재생 로직 (Web Audio API 사용)
+  - 정답: "딩동댕" 상승 멜로디
+  - 오답: "땡" buzzer 사운드
+- [x] `useSoundEffect` 훅 구현
 
 **수정 파일:**
 - `src/pages/GamePage.tsx`
 - `src/hooks/useSoundEffect.ts` (신규)
-- `src/assets/sounds/` (효과음 파일 추가)
+- `src/hooks/index.ts`
 
 **완료 기준:** 정답/오답 시 시각적 + 청각적 피드백 동작
 
@@ -152,7 +152,7 @@ LLM Agent가 효율적으로 처리할 수 있도록 기능 단위로 분리한 
 | Step 3 | ✅ 완료 | Image Training 모드 구현 |
 | Step 4 | ✅ 완료 | Pitchfinder YIN 통합 |
 | Step 5 | ✅ 완료 | Listening Challenge 구현 |
-| Step 6 | ⬜ 대기 | |
+| Step 6 | ✅ 완료 | 피드백 UX (시각/청각) |
 | Step 7 | ⬜ 대기 | 선택 사항 |
 | Step 8 | ⬜ 대기 | |
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Square, Mic } from 'lucide-react'
 import { useGameStore } from '@/store/useGameStore'
-import { useGameLogic, useWakeLock, useTimer, useAudio, usePitchDetect } from '@/hooks'
+import { useGameLogic, useWakeLock, useTimer, useAudio, usePitchDetect, useSoundEffect } from '@/hooks'
 import { FEEDBACK_DELAY_MS } from '@/lib/constants'
 import { isSameNote } from '@/lib/music-theory'
 import type { Note } from '@/types'
@@ -16,6 +16,7 @@ export function GamePage() {
   const { game, settings, endGame, nextQuestion, submitAnswer } = useGameStore()
   const { startNewQuestion } = useGameLogic()
   const { request: requestWakeLock, release: releaseWakeLock } = useWakeLock()
+  const { play: playSoundEffect } = useSoundEffect()
   const feedbackTimeoutRef = useRef<number | null>(null)
   const [micError, setMicError] = useState<string | null>(null)
 
@@ -54,13 +55,16 @@ export function GamePage() {
 
   // 타임아웃 핸들러
   const handleTimeout = useCallback(() => {
+    // 이미 피드백 상태면 무시 (정답이 이미 처리됨)
+    if (game.status !== 'playing') return
+
     if (game.mode === 'image') {
       submitAnswer(false)
     } else if (game.mode === 'listening') {
       // Mode A: 타임아웃 시 오답 처리
       submitAnswer(false)
     }
-  }, [game.mode, submitAnswer])
+  }, [game.mode, game.status, submitAnswer])
 
   // 타이머 훅
   const { timeLeft, start: startTimer, reset: resetTimer } = useTimer(
@@ -138,6 +142,13 @@ export function GamePage() {
     }
   }, [game.mode, game.status, goToNextQuestion])
 
+  // 피드백 효과음 재생 (Mode A만)
+  useEffect(() => {
+    if (game.mode === 'listening' && game.status === 'feedback' && game.isCorrect !== null) {
+      playSoundEffect(game.isCorrect ? 'correct' : 'incorrect')
+    }
+  }, [game.mode, game.status, game.isCorrect, playSoundEffect])
+
   const handleStop = () => {
     resetTimer()
     stopListening()
@@ -155,12 +166,12 @@ export function GamePage() {
   return (
     <div
       className={`min-h-screen flex flex-col transition-colors duration-300 ${
-        game.isCorrect === true
+        game.mode === 'listening' && game.isCorrect === true
           ? 'bg-emerald-500/20'
-          : game.isCorrect === false
+          : game.mode === 'listening' && game.isCorrect === false
           ? 'bg-rose-500/20'
           : 'bg-slate-900'
-      }`}
+      } ${game.mode === 'listening' && game.isCorrect === false ? 'animate-shake' : ''}`}
     >
       {/* Progress Bar */}
       <div className="h-1.5 bg-slate-800 overflow-hidden">
@@ -199,6 +210,14 @@ export function GamePage() {
         @keyframes pulse-mic {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+          20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        .animate-shake {
+          animation: shake 0.4s ease-in-out;
         }
       `}</style>
 
@@ -274,10 +293,14 @@ export function GamePage() {
                 <div className="text-center">
                   <p
                     className={`text-2xl font-bold ${
-                      game.isCorrect ? 'text-emerald-400' : 'text-rose-500'
+                      game.mode === 'image'
+                        ? 'text-slate-100'
+                        : game.isCorrect
+                        ? 'text-emerald-400'
+                        : 'text-rose-500'
                     }`}
                   >
-                    {game.isCorrect ? '정답!' : `${game.currentQuestion.fret}프렛`}
+                    {game.mode === 'listening' && game.isCorrect ? '정답!' : `${game.currentQuestion.fret}프렛`}
                   </p>
                   {/* Mode A: 오답 시 다음 버튼 표시 */}
                   {!game.isCorrect && game.mode === 'listening' && (

@@ -77,7 +77,9 @@ export function useAudio(): UseAudioReturn {
 
     // Close audio context
     setAudioContext((ctx) => {
-      ctx?.close()
+      if (ctx && ctx.state !== 'closed') {
+        ctx.close()
+      }
       return null
     })
 

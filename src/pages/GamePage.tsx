@@ -19,6 +19,7 @@ export function GamePage() {
   const { play: playSoundEffect } = useSoundEffect()
   const feedbackTimeoutRef = useRef<number | null>(null)
   const [micError, setMicError] = useState<string | null>(null)
+  const isTransitioning = useRef(false)
 
   // Audio hooks for Mode A
   const {
@@ -72,14 +73,19 @@ export function GamePage() {
     { onTimeout: handleTimeout }
   )
 
-  // Progress 계산
-  const progress = settings.timerDuration > 0 ? timeLeft / settings.timerDuration : 0
-
-  // 다음 문제로 이동
+  // 다음 문제로 이동 (빠른 연타 방지)
   const goToNextQuestion = useCallback(() => {
+    if (isTransitioning.current) return
+    isTransitioning.current = true
+
     nextQuestion()
     startNewQuestion()
     startTimer(settings.timerDuration)
+
+    // 짧은 딜레이 후 다시 전환 가능
+    setTimeout(() => {
+      isTransitioning.current = false
+    }, 100)
   }, [nextQuestion, startNewQuestion, startTimer, settings.timerDuration])
 
   // Initialize game on mount
@@ -188,13 +194,17 @@ export function GamePage() {
             }}
           />
         )}
-        {/* Mode A: JavaScript 기반 */}
-        {game.mode === 'listening' && (
+        {/* Mode A: CSS animation (Mode B와 동일) */}
+        {game.mode === 'listening' && game.currentQuestion && (
           <div
-            className={`h-full transition-all duration-200 ${
-              progress > 0.3 ? 'bg-indigo-600' : 'bg-rose-500'
-            }`}
-            style={{ width: `${progress * 100}%` }}
+            key={`listening-${game.currentQuestion.note}-${game.currentQuestion.string}-${game.currentQuestion.fret}`}
+            className="h-full bg-indigo-600 origin-left"
+            style={{
+              animation: game.status === 'playing'
+                ? `shrinkBar ${settings.timerDuration}s linear forwards`
+                : 'none',
+              width: game.status === 'playing' ? undefined : '0%',
+            }}
           />
         )}
       </div>
@@ -241,6 +251,16 @@ export function GamePage() {
           </div>
         )}
         <div className="flex-1" />
+        {/* Timer display for Mode A */}
+        {game.mode === 'listening' && (
+          <div
+            className={`text-slate-400 font-mono text-lg transition-opacity duration-200 mr-3 ${
+              game.status === 'playing' ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            {Math.ceil(timeLeft)}초
+          </div>
+        )}
         {/* Mic indicator for Mode A */}
         {game.mode === 'listening' && game.status === 'playing' && (
           <div
@@ -306,7 +326,8 @@ export function GamePage() {
                   {!game.isCorrect && game.mode === 'listening' && (
                     <button
                       onClick={handleNext}
-                      className="mt-4 px-6 py-2 bg-slate-700 rounded-lg text-slate-100"
+                      className="mt-4 px-6 py-2 bg-slate-700 rounded-lg text-slate-100 active:scale-95 transition-transform"
+                      aria-label="다음 문제로 이동"
                     >
                       다음
                     </button>
@@ -328,9 +349,10 @@ export function GamePage() {
       <div className="p-4 flex justify-end">
         <button
           onClick={handleStop}
-          className="p-3 rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 transition-all"
+          className="p-3 rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 active:scale-95 transition-all"
+          aria-label="게임 종료"
         >
-          <Square className="w-5 h-5" />
+          <Square className="w-5 h-5" aria-hidden="true" />
         </button>
       </div>
     </div>

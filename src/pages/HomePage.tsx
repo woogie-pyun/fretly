@@ -56,6 +56,8 @@ export function HomePage() {
                         ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                         : 'border-slate-600 text-slate-500 hover:border-slate-500 hover:text-slate-400'
                     )}
+                    aria-label={`${string}번 줄 ${isSelected ? '선택됨' : '선택 안됨'}`}
+                    aria-pressed={isSelected}
                   >
                     {string}
                   </button>
@@ -108,15 +110,17 @@ export function HomePage() {
           <button
             onClick={() => handleStartGame('listening')}
             className="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20"
+            aria-label="마이크를 사용한 리스닝 챌린지 시작"
           >
-            <Mic className="w-5 h-5" />
+            <Mic className="w-5 h-5" aria-hidden="true" />
             리스닝 챌린지 시작
           </button>
           <button
             onClick={() => handleStartGame('image')}
             className="w-full py-4 px-6 bg-slate-700 hover:bg-slate-600 rounded-xl text-white font-semibold flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
+            aria-label="눈으로 학습하는 이미지 트레이닝 시작"
           >
-            <Eye className="w-5 h-5" />
+            <Eye className="w-5 h-5" aria-hidden="true" />
             이미지 트레이닝 시작
           </button>
         </div>

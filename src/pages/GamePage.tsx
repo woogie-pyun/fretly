@@ -14,7 +14,7 @@ import type { Note } from '@/types'
 export function GamePage() {
   const navigate = useNavigate()
   const { game, settings, endGame, nextQuestion, submitAnswer } = useGameStore()
-  const { startNewQuestion } = useGameLogic()
+  const { startNewQuestion, getValidFretPositions } = useGameLogic()
   const { request: requestWakeLock, release: releaseWakeLock } = useWakeLock()
   const { play: playSoundEffect } = useSoundEffect()
   const feedbackTimeoutRef = useRef<number | null>(null)
@@ -320,7 +320,7 @@ export function GamePage() {
                         : 'text-rose-500'
                     }`}
                   >
-                    {game.mode === 'listening' && game.isCorrect ? '정답!' : `${game.currentQuestion.fret}프렛`}
+                    {game.mode === 'listening' && game.isCorrect ? '정답!' : `${getValidFretPositions().join(', ')}프렛`}
                   </p>
                   {/* Mode A: 오답 시 다음 버튼 표시 */}
                   {!game.isCorrect && game.mode === 'listening' && (

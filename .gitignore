@@ -22,3 +22,133 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.claude/skills/*/.env*
+# Private keys (specific patterns to avoid false positives)
+# Cloud provider credentials
+# Build Tools & Frameworks
+*_token=*
+.claude/local/
+.claude/skills/*/secrets/
+.venv/
+node_modules/
+dist-ssr/
+*.pyc
+.env
+*_secret.*
+.DocumentRevisions-V100
+!.env.example
+.claude/settings.local.json
+*.temp
+.AppleDouble
+*.bak
+.env/
+.LSOverride
+*.jks
+# Claude Code Configuration
+.firebase/
+# Version: 0.33.0
+.vercel/
+.vscode/
+# Environment files
+__pycache__/
+Thumbs.db
+env/
+secret-key-*
+venv/
+# ===========================================
+*.tmp
+*_backup_*/
+.claude/skills/*/*/*key*
+*.egg-info/
+*~
+# Windows
+*.key.*
+*_secret=*
+# Test Coverage
+*.pyd
+.Spotlight-V100
+.netlify/
+.claude/settings.local.*.json
+logs/
+*.dbm
+*.backup
+.claude/.env.local*
+*.sublime-project
+# Secrets and Credentials (CRITICAL)
+*.rdb
+[Dd]esktop.ini
+.nuxt/
+*-api-key.*
+*-backup/
+.mypy_cache/
+api-key-*
+.moai-backups/
+.ruff_cache/
+*.swp
+.pytest_cache/
+out/
+*.sqlite3
+# Backups
+.env.*
+*.db
+private-key*
+*-secret-key.*
+.aws/credentials
+.#*
+# ============================================
+.coverage
+# Skill-specific credentials
+.Trashes
+.aws/config
+# Node.js (for docs/Nextra)
+# Certificate files
+# Python Cache & Bytecode
+*-key.*
+.TemporaryItems
+# Build Artifacts & Distribution
+# Linux
+*.sqlite
+# Updated: 2026-01-10
+.fseventsd
+*.egg
+.idea/
+# Logs & Temporary Files
+*.pem
+.claude/skills/*/*/*secret*
+# MoAI-ADK Package Distribution .gitignore
+.next/
+secret-*.*
+# OS Files
+# Purpose: Essential patterns for user projects
+*.tsbuildinfo
+dist/
+ehthumbs.db
+.uv_cache/
+.cursor/
+*.pyo
+*.swo
+*-secret.*
+htmlcov/
+coverage.json
+# FIXED: Issue #237 - Replaced overly broad *key* and *secret* patterns
+*.pfx
+# Mac
+.uv-cache/
+*.p12
+.tscache/
+.claude/skills/*/*/*token*
+# Deployment & CI/CD
+*.backup/
+# IDE & Editors
+*.secret.*
+.turbo/
+build/
+.directory
+*.sublime-workspace
+.VolumeIcon.icns
+# Credential patterns in environment files
+# Virtual Environments
+*_key.*
+coverage/
+.mcp.json
+WARP.md
